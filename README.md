@@ -1,5 +1,34 @@
 ---------
 
+# TL;DR
+
+**Ragzip stands for randomly-accessible gzip**.
+The ragzip format **is a compatible gzip (.gz) file**.
+The ragzip metadata is stored in the gzip header of "empty" gzip members.
+
+### How it works
+
+The reader seeks the footer at file length's - 64 and loads a gzip member whose 'RA' metadata field has details about the structure (detailed later).
+For example, number of index levels is 2, index size is 2^16 (4096 nodes per index) and page size is 2^16 (64kiB).
+These are powers of 2, but conveniently set to a multiple of 4 in this example.
+
+The reader wants to load decompressed bytes at logical offset 0x0000_0011_1222_3333.
+
+The reader reads the footer for the file location of the top index gzip member.
+It then seeks the file there and reads a gzip member, whose 'RA' metadata field is an index long array (the level 2 index).
+
+In that level 2 long array, the long at offset 0x111 is another offset, the offset of a gzip member (for level 1) to read next.
+The reader then reads a gzip member there, whose 'RA' metadata field is an index long array (the level 1 index).
+
+In that level 1 long array, the long at offset 0x222 is another offset, the offset of the gzipped page to read next.
+The reader then reads the gzip member, decompressing but not delivering 0x3333 bytes of data.
+
+Then finally the reader can begin offering decompressed logical bytes to the caller, effectively positionned logical offset 0x0000_0011_1222_3333.
+
+
+
+---------
+
 # The ragzip file format specification
 
 Imagine if you could randomly access any byte in a gzipped content, with a minimal seeking and skipping cost
