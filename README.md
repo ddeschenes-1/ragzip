@@ -9,8 +9,8 @@ The ragzip metadata is stored in the gzip header of "empty" gzip members.
 ### How it works
 
 The reader seeks the footer at file length's - 64 and loads a gzip member whose 'RA' metadata field has details about the structure (detailed later).
-For example, number of index levels is 2, index size is 2^16 (4096 nodes per index) and page size is 2^16 (64kiB).
-These are powers of 2, but conveniently set to a multiple of 4 in this example.
+For example, number of index levels is 2, index size power is 12 (2^12 = 4096 nodes per index) and page size power is 16 (2^16 = 64kiB).
+These are powers of 2 conveniently set to a multiple of 4 in this example for easier understanding of how the hexadecimal breaks into bits parts.
 
 The reader wants to load decompressed bytes at logical offset 0x0000_0011_1222_3333.
 
@@ -23,7 +23,7 @@ The reader then reads a gzip member there, whose 'RA' metadata field is an index
 In that level 1 long array, the long at offset 0x222 is another offset, the offset of the gzipped page to read next.
 The reader then reads the gzip member, decompressing but not delivering 0x3333 bytes of data.
 
-Then finally the reader can begin offering decompressed logical bytes to the caller, effectively positionned logical offset 0x0000_0011_1222_3333.
+Then finally the ragzip reader can begin offering decompressed logical bytes to the caller, effectively positionned at logical offset 0x0000_0011_1222_3333.
 
 
 
