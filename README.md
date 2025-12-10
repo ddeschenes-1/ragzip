@@ -597,4 +597,4 @@ access but enable parallel decoding.
 
 ---------
 
-Copyright (c) 2024 Danny Deschenes.
+Copyright (c) 2025 Danny Deschenes.
