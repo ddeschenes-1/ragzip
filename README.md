@@ -8,22 +8,27 @@ The ragzip metadata is stored in the gzip header of "empty" gzip members.
 
 ### How it works
 
-The reader seeks the footer at file length's - 64 and loads a gzip member whose 'RA' metadata field has details about the structure (detailed later).
-For example, number of index levels is 2, index size power is 12 (2^12 = 4096 nodes per index) and page size power is 16 (2^16 = 64kiB).
-These are powers of 2 conveniently set to a multiple of 4 in this example for easier understanding of how the hexadecimal breaks into bits parts.
+Let's say the reader wants to load decompressed bytes at logical offset 0x0000_0011_1222_3333.
+(For easier understanding, the size of the groups of bits is set here to a multiple of 4, expressed in hexadecimal.
+Of course, the bits groups in a ragzip 'tree spec' can be set to any bits width).
 
-The reader wants to load decompressed bytes at logical offset 0x0000_0011_1222_3333.
+Let's assume the ragzip file's tree spec (coming from the ragzip file footer) declares 2 levels of index, 12 bits per index and 16 bits for pages.
+As an analogy to a url, this tree spec would slice the logical ofset into /111/222#3333.
 
-The reader interprets the footer for the location, in the file, of the top index gzip member.
-It then seeks the file there and reads a gzip member, whose 'RA' metadata field is an index, i.e. an array of 'long' (the level 2 index).
+If the ragzip tree spec had documented 6 levels of indexes, 8 bits per index and 12 bits for pages,
+the analogy to a url would be /00/00/01/11/22/23#333.
 
-In that level 2 array, the 'long' at offset 0x111 is another offset, the one of another gzip member (for level 1) to read next.
-The reader then interprets the gzip member there, whose 'RA' metadata field is another index (array of 'long again'), i.e. the level 1 index.
+Let's continue with the /111/222#3333 case.
 
-In that level 1 array, the 'long' at offset 0x222 is another offset, the one of the gzipped page to read next.
-The reader then reads that final data-filled gzip member, decompressing but not delivering the first 0x3333 bytes of data.
+The reader seeks the file for the top index (root folder) and reads (from an empty gzip metadata) an array of 'long'.
+The 'long' at offset 0x111 is another offset to an index of level 1 (the content of folder /111).
 
-Then, finally the reader can begin offering decompressed logical bytes to the caller, effectively positionned at logical offset 0x0000_0011_1222_3333.
+Because the reader as reached a level 1 index, the array of 'long' will contain offsets to pages (actual gzipped data).
+The 'long' at offset 0x222 is the offset of the gzipped page to read next.
+
+The reader then seeks and reads that final data-filled gzip member, decompressing but not delivering (skipping) the first 0x3333 logical bytes of data.
+
+Then, finally the reader can begin delivering decompressed logical bytes to the caller, effectively positionned at logical offset 0x0000_0011_1222_3333.
 
 
 
