@@ -135,3 +135,11 @@ Admit it, everybody can be happy viewing indentation with tabs because they can 
 TABs were invented for that purpose.
 
 You have to become good at reading someone else's code. This is 95% of your job.
+
+
+
+
+---------
+
+Copyright (c) 2026 Danny Deschenes.
+
